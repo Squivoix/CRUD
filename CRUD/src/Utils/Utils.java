@@ -106,7 +106,7 @@ public abstract class Utils {
         try {
             Connection connection = DBConnection.GetConnection();
 
-            String sql = "INSERT INTO books (isbn, title, author, publisher, year, obs) VALUES (?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO books (isbn, title, author, publisher, year, observations) VALUES (?, ?, ?, ?, ?, ?)";
             
             PreparedStatement statement = connection.prepareStatement(sql);
 
@@ -138,7 +138,7 @@ public abstract class Utils {
         try {
             Connection connection = DBConnection.GetConnection();
 
-            String sql = "UPDATE books SET isbn = ?, title = ?, author = ?, publisher = ?, year = ?, obs = ? WHERE id = ?";
+            String sql = "UPDATE books SET isbn = ?, title = ?, author = ?, publisher = ?, year = ?, observations = ? WHERE id = ?";
             
             PreparedStatement statement = connection.prepareStatement(sql);
 
@@ -314,6 +314,65 @@ public abstract class Utils {
         }
         
         return false;
+    }
+    
+    /**
+     * Filters the book registry, adn return the result if found any. This function also orders the result if given any.
+     * @param filter The words to look for in the database.
+     * @param orderTitle The title of the column to order by. If null the function orders by ASC.
+     * @param order The order, if is DESC or ASC.
+     * @return 
+     */
+    public static ResultSet FilterBooks(String filter, String orderTitle, String order) {
+        try {
+            Connection connection = DBConnection.GetConnection();
+            StringBuilder sql = new StringBuilder();
+            
+            if(profile == 5) {
+                sql.append("SELECT * FROM books WHERE id LIKE '%");
+                sql.append(filter);
+                sql.append("%' OR isbn LIKE '%");
+            } else {
+                sql.append("SELECT * FROM books WHERE isbn LIKE '%");
+            }
+            
+            sql.append(filter);
+            sql.append("%' OR title LIKE '%");
+            sql.append(filter);
+            sql.append("%' OR author LIKE '%");
+            sql.append(filter);
+            sql.append("%' OR publisher LIKE '%");
+            sql.append(filter);
+            sql.append("%' OR year LIKE '%");
+            sql.append(filter);
+            sql.append("%' OR observations LIKE '%");
+            sql.append(filter);
+                
+            if(orderTitle.equals("null")) {
+                sql.append("%'");
+            } else if(!filter.equals("null") && !orderTitle.equals("null")) {
+                sql.append("%' ORDER BY ");
+                sql.append(orderTitle);
+                sql.append(" ");
+                sql.append(order);
+            } else {
+                sql.delete(0, sql.length());
+                sql.append("SELECT * FROM books ORDER BY ");
+                sql.append(orderTitle);
+                sql.append(" ");
+                sql.append(order);
+            }
+                       
+            Statement command = connection.createStatement();
+            
+            ResultSet result = command.executeQuery(sql.toString());
+            
+            return result;
+        } catch(SQLException ex) {
+            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return null;
     }
     
     /**
